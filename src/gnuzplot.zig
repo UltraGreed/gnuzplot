@@ -94,7 +94,6 @@ pub fn Gnuzplot() type {
 
             const nanosecs: u64 = @intFromFloat(secs * 1.0e9);
 
-
             std.time.sleep(nanosecs); // std.time.sleep expects nanoseconds
         }
 
@@ -228,7 +227,6 @@ pub fn Gnuzplot() type {
 
                 while (j < vlen) : (j += 1) {
                     try self.writer.print("{d}   {e:10.4} {e:10.4}\n", .{
-
                         @as(f64, @floatFromInt(j)) + @as(f64, @floatFromInt(i)) * width / @as(f64, @floatFromInt(num_vars)),
 
                         @field(argstruct, argvec[i].name)[j],

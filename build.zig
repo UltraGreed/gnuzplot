@@ -4,35 +4,38 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // example executable --------------------------------------------
-
-    const exe_example = b.addExecutable(.{
-        .name = "examples",
-        .root_source_file = b.path("./example/examples.zig"),
+    // library module ------------------------------------------------
+    const gnuzplot_mod = b.addModule("gnuzplot", .{
+        .root_source_file = b.path("src/gnuzplot.zig"),
         .target = target,
         .optimize = optimize,
     });
+
+    // example executable --------------------------------------------
+    const exe_example = b.addExecutable(.{
+        .name = "examples",
+        .root_source_file = b.path("example/examples.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    exe_example.root_module.addImport("gnuzplot", gnuzplot_mod);
 
     b.installArtifact(exe_example);
 
-    b.getInstallStep().dependOn(&b.addInstallArtifact(exe_example, .{
-            .dest_dir = .{ .override = .{ .custom = "../example"}}}).step);
+    const run_cmd = b.addRunArtifact(exe_example);
+    run_cmd.setCwd(.{ .cwd_relative = "example/" });
 
-    exe_example.root_module.addAnonymousImport("gnuzplot", .{
-        // .source_file = b.path("./gnuzplot.zig"),
-        .root_source_file = b.path("./gnuzplot.zig"),
-    });
+    const run_step = b.step("run", "Run example program parser");
+    run_step.dependOn(&run_cmd.step);
 
     // unit tests ----------------------------------------------------
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("./main_test.zig"),
+        .root_source_file = b.path("./test/main_test.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    unit_tests.root_module.addAnonymousImport("gnuzplot", .{
-        .root_source_file = b.path("./gnuzplot.zig" ),
-    });
+    unit_tests.root_module.addImport("gnuzplot", gnuzplot_mod);
 
     const unit_tests_step = b.step("test", "Run unit tests");
     unit_tests_step.dependOn(&unit_tests.step);

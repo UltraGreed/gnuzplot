@@ -1,0 +1,27 @@
+.{
+    // This is the default name used by packages depending on this one. For
+    // example, when a user runs `zig fetch --save <url>`, this field is used
+    // as the key in the `dependencies` table. Although the user can choose a
+    // different name, most users will stick with this provided value.
+    .name = .gnuzplot,
+
+    .version = "1.0.0",
+
+    .minimum_zig_version = "0.14.0",
+
+    .fingerprint = 0x13f775fae2478007,
+
+    // All following paths will be installed with zig fetch
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "README.md",
+        "gnuzplot.zig",
+        "matplotlib_colors.zig",
+        "main_test.zig",
+        "test",
+        "src",
+    },
+}
+
