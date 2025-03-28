@@ -1,5 +1,4 @@
 const std = @import("std");
-const print = std.debug.print;
 
 const Allocator = std.mem.Allocator;
 const stdout = std.io.getStdOut().writer();
@@ -15,6 +14,7 @@ pub fn Gnuzplot() type {
 
         g: Child,
         writer: std.fs.File.Writer,
+        debug_mode: bool = false,
 
         pub fn init(allocator: Allocator) !Self {
             const child_name = "gnuplot";
@@ -41,46 +41,57 @@ pub fn Gnuzplot() type {
             };
         }
 
-        // manually execute any gnuplot command does not have an existing wrapper
-        pub fn cmd(self: Self, c: [*:0]const u8) !void {
+        // manually execute any gnuplot command with zig string formatting
+        pub fn cmdfmt(self: *const Self, comptime fmt: []const u8, args: anytype) !void {
+            if (self.debug_mode) {
+                std.debug.print(fmt, args);
+            }
+            try self.writer.print(fmt, args);
+        }
+
+        // manually execute any gnuplot command with automatically added Enter
+        pub fn cmd(self: Self, c: []const u8) !void {
+            if (self.debug_mode) {
+                std.debug.print("{s}\n", .{c});
+            }
             try self.writer.print("{s}\n", .{c});
         }
 
         // clear the plot figure
         pub fn clear(self: Self) !void {
-            try self.writer.print("clear\n", .{});
+            try self.cmdfmt("clear\n", .{});
         }
 
         // close gnuplot child process
         pub fn exit(self: Self) !void {
-            try self.writer.print("exit\n", .{});
+            try self.cmdfmt("exit\n", .{});
         }
 
         // place figure window on screen
         pub fn figPos(self: Self, x: i64, y: i64) !void {
-            try self.writer.print("set term qt position {d} , {d} \n", .{ x, y });
+            try self.cmdfmt("set term qt position {d} , {d} \n", .{ x, y });
         }
 
         // size figure window
         pub fn figSize(self: Self, wid: i64, ht: i64) !void {
-            try self.writer.print("set term qt size {d} , {d} \n", .{ wid, ht });
+            try self.cmdfmt("set term qt size {d} , {d} \n", .{ wid, ht });
         }
 
         // remove grid from the plot
         pub fn gridOff(self: Self) !void {
-            try self.writer.print("unset grid\n", .{});
+            try self.cmdfmt("unset grid\n", .{});
         }
 
         // place a grid on the plot
         pub fn gridOn(self: Self) !void {
-            try self.writer.print("set grid\n", .{});
+            try self.cmdfmt("set grid\n", .{});
         }
 
         // pause both parent zig process and child gnuplot process (maintain sync)
         // prints a message to stdout terminal
         pub fn pause(self: Self, secs: f64) !void {
             try stdout.print("pausing {d} s\n", .{secs}); //
-            try self.writer.print("pause {d}\n", .{secs}); //gnu
+            try self.cmdfmt("pause {d}\n", .{secs}); //gnu
 
             const nanosecs: u64 = @intFromFloat(secs * 1.0e9);
 
@@ -90,7 +101,7 @@ pub fn Gnuzplot() type {
         // pause both parent zig process and child gnuplot process (maintain sync)
         // without terminal message
         pub fn pauseQuiet(self: Self, secs: f64) !void {
-            try self.writer.print("pause {d}\n", .{secs}); //gnu
+            try self.cmdfmt("pause {d}\n", .{secs}); //gnu
 
             const nanosecs: u64 = @intFromFloat(secs * 1.0e9);
 
@@ -118,24 +129,24 @@ pub fn Gnuzplot() type {
             const plotline_pre = " '-' u 1:2 ";
             const plotline_post = ", ";
 
-            try self.writer.print("{s}", .{preamble});
+            try self.cmdfmt("{s}", .{preamble});
 
             // write command string
             inline while (i < argvec.len) : (i += 2) {
-                try self.writer.print("{s}", .{plotline_pre});
-                try self.writer.print("{s}", .{@field(argstruct, argvec[i + 1].name)});
-                try self.writer.print("{s}", .{plotline_post});
+                try self.cmdfmt("{s}", .{plotline_pre});
+                try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 1].name)});
+                try self.cmdfmt("{s}", .{plotline_post});
             }
-            try self.writer.print("\n", .{});
+            try self.cmdfmt("\n", .{});
 
             i = 0;
             inline while (i < argvec.len) : (i += 2) {
                 vlen = @field(argstruct, argvec[i].name).len;
                 var j: usize = 0;
                 while (j < vlen) : (j += 1) {
-                    try self.writer.print("{d}  {e:10.4}\n", .{ j, @field(argstruct, argvec[i].name)[j] });
+                    try self.cmdfmt("{d}  {e:10.4}\n", .{ j, @field(argstruct, argvec[i].name)[j] });
                 }
-                try self.writer.print("e\n", .{});
+                try self.cmdfmt("e\n", .{});
             }
         }
 
@@ -151,40 +162,40 @@ pub fn Gnuzplot() type {
             const plotline_pre = " '-' u 1:2 ";
             const plotline_post = ", ";
 
-            try self.writer.print("{s}", .{preamble});
+            try self.cmdfmt("{s}", .{preamble});
 
             // write command string
             inline while (i < argvec.len) : (i += 3) {
-                try self.writer.print("{s}", .{plotline_pre});
-                try self.writer.print("{s}", .{@field(argstruct, argvec[i + 2].name)});
-                try self.writer.print("{s}", .{plotline_post});
+                try self.cmdfmt("{s}", .{plotline_pre});
+                try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 2].name)});
+                try self.cmdfmt("{s}", .{plotline_post});
             }
-            try self.writer.print("\n", .{});
+            try self.cmdfmt("\n", .{});
 
             i = 0;
             inline while (i < argvec.len) : (i += 3) {
                 vlen = @field(argstruct, argvec[i].name).len;
                 var j: usize = 0;
                 while (j < vlen) : (j += 1) {
-                    try self.writer.print("{e:10.4}   {e:10.4}\n", .{ @field(argstruct, argvec[i].name)[j], @field(argstruct, argvec[i + 1].name)[j] });
+                    try self.cmdfmt("{e:10.4}   {e:10.4}\n", .{ @field(argstruct, argvec[i].name)[j], @field(argstruct, argvec[i + 1].name)[j] });
                 }
-                try self.writer.print("e\n", .{});
+                try self.cmdfmt("e\n", .{});
             }
         }
 
         // set the figure title
         pub fn title(self: Self, title_str: [*:0]const u8) !void {
-            try self.writer.print("set title '{s}'\n", .{title_str});
+            try self.cmdfmt("set title '{s}'\n", .{title_str});
         }
 
         // put label on x-axis
         pub fn xLabel(self: Self, c: [*:0]const u8) !void {
-            try self.writer.print("set xlabel '{s}'\n", .{c});
+            try self.cmdfmt("set xlabel '{s}'\n", .{c});
         }
 
         // put label on y-axis
         pub fn yLabel(self: Self, c: [*:0]const u8) !void {
-            try self.writer.print("set ylabel '{s}'\n", .{c});
+            try self.cmdfmt("set ylabel '{s}'\n", .{c});
         }
 
         // bar graph of a single vector, specifying the width
@@ -204,21 +215,21 @@ pub fn Gnuzplot() type {
 
             vlen = @field(argstruct, argvec[0].name).len;
 
-            try self.writer.print("set xrange [-1:{d}]\n", .{vlen + 1});
+            try self.cmdfmt("set xrange [-1:{d}]\n", .{vlen + 1});
 
             const preamble = "set style fill solid 0.5 \n plot ";
             const plotline_pre = " '-' u 1:2:3 with boxes ";
             const plotline_post = ", ";
-            try self.writer.print("{s}", .{preamble});
+            try self.cmdfmt("{s}", .{preamble});
 
             // write command string
             comptime var i = 0;
             inline while (i < argvec.len) : (i += 3) {
-                try self.writer.print("{s}", .{plotline_pre});
-                try self.writer.print("{s}", .{@field(argstruct, argvec[i + 2].name)});
-                try self.writer.print("{s}", .{plotline_post});
+                try self.cmdfmt("{s}", .{plotline_pre});
+                try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 2].name)});
+                try self.cmdfmt("{s}", .{plotline_post});
             }
-            try self.writer.print("\n", .{});
+            try self.cmdfmt("\n", .{});
 
             i = 0;
             inline while (i < argvec.len) : (i += 3) {
@@ -226,7 +237,7 @@ pub fn Gnuzplot() type {
                 var j: usize = 0;
 
                 while (j < vlen) : (j += 1) {
-                    try self.writer.print("{d}   {e:10.4} {e:10.4}\n", .{
+                    try self.cmdfmt("{d}   {e:10.4} {e:10.4}\n", .{
                         @as(f64, @floatFromInt(j)) + @as(f64, @floatFromInt(i)) * width / @as(f64, @floatFromInt(num_vars)),
 
                         @field(argstruct, argvec[i].name)[j],
@@ -234,7 +245,7 @@ pub fn Gnuzplot() type {
                         width,
                     });
                 }
-                try self.writer.print("e\n", .{});
+                try self.cmdfmt("e\n", .{});
             }
         }
     };

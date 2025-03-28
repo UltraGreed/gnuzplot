@@ -12,12 +12,21 @@ test "\t methods, \t .init \n" {
     _ = plt;
 }
 
-test "\t methods, \t .cmd (print help help message and exists\n" {
+test "\t methods, \t .cmd (print help help message and exits\n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
     var plt = try Gnuzplot().init(allocator);
     try plt.cmd("help help");
+    try plt.exit();
+}
+
+test "\t methods, \t .cmdfmt (print help help message and exits\n" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var plt = try Gnuzplot().init(allocator);
+    try plt.cmdfmt("{s}\n", .{"help help"});
     try plt.exit();
 }
 
