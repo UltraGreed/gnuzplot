@@ -124,11 +124,11 @@ pub const Gnuzplot = struct {
 
     // plot a single vector (values over each index) use:
     //
-    // plt.plot( .{x, "title 'x' with lines ls 5 lw 1"});
+    // self.plot( .{x, "title 'x' with lines ls 5 lw 1"});
     //
     // to plot multiple vector in same plot (values over each index) use:
     //
-    //  plt.plot( .{
+    //  self.plot( .{
     //          x, "title 'x' with lines ls 2 lw 1",
     //          y, "title 'x' with lines ls 2 lw 1",
     //          z, "title 'x' with lines ls 2 lw 1",
@@ -163,7 +163,7 @@ pub const Gnuzplot = struct {
 
     // plot the graph of vector x vs. vector y using:
     //
-    // plt.plotXY( .{x, y, "title 'y vs. x' with lines lw 3"});
+    // self.plotXY( .{x, y, "title 'y vs. x' with lines lw 3"});
     //
     pub fn plotXY(self: *const Self, argstruct: anytype) !void {
         const argvec = fields(@TypeOf(argstruct));
@@ -196,7 +196,7 @@ pub const Gnuzplot = struct {
     // plot the bar graph of vectors
     // if multiple vectors are provided, their corresponding elements are grouped together
     //
-    // plt.bar(.{x, width, "title 'x'"});
+    // self.bar(.{x, width, "title 'x'"});
     //
     // a width in range of [0, 1] must be specified
     pub fn bar(self: Self, argstruct: anytype) !void {
@@ -230,6 +230,54 @@ pub const Gnuzplot = struct {
         inline for (0..n_plots) |i| {
             const command_suffix = @field(argstruct, argvec[i * 3 + 2].name);
             try self.cmdfmt("$data{d} with boxes {s}, ", .{
+                i,
+                command_suffix,
+            });
+        }
+        try self.cmdfmt("\n", .{});
+    }
+
+    // splot with nonuniform matrix
+    // splot(.{
+    //  xs1, ys1, zs1, "with lines title title1"
+    //  xs2, ys2, zs2, "with lines title title2"
+    //  ...
+    // })
+    // zs should be an array of shape [N][M] where N is len of xs and M is len of ys
+    pub fn splot(self: *const Self, argstruct: anytype) !void {
+        const argvec = std.meta.fields(@TypeOf(argstruct));
+
+        if (argvec.len % 4 != 0) {
+            return error.WrongArgument;
+        }
+
+        inline for (0..argvec.len / 4) |i| {
+            try self.cmdfmt("$data{d} << EOD\n", .{i});
+
+            const xs = @field(argstruct, argvec[i * 4].name);
+            const ys = @field(argstruct, argvec[i * 4 + 1].name);
+            const zs = @field(argstruct, argvec[i * 4 + 2].name);
+
+            try self.cmdfmt("{d:.3} ", .{ys.len});
+            for (ys) |y| {
+                try self.cmdfmt("{d:.3} ", .{y});
+            }
+            try self.cmdfmt("\n", .{});
+            for (xs, 0..) |x, j| {
+                try self.cmdfmt("{d:.3} ", .{x});
+                for (0..ys.len) |k| {
+                    try self.cmdfmt("{d:.3} ", .{zs[j][k]});
+                }
+                try self.cmdfmt("\n", .{});
+            }
+            try self.cmdfmt("EOD\n", .{});
+        }
+
+        // write command string
+        try self.cmdfmt("splot ", .{});
+        inline for (0..argvec.len / 4) |i| {
+            const command_suffix = @field(argstruct, argvec[i * 4 + 3].name);
+            try self.cmdfmt("$data{d} nonuniform matrix {s}, ", .{
                 i,
                 command_suffix,
             });

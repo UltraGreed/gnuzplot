@@ -21,6 +21,9 @@ const PlotData = struct {
     x: []f64,
     y: []f64,
     z: []f64,
+    splot_x: []f64,
+    splot_y: []f64,
+    splot_z: [][]f64,
 };
 
 pub fn readJSON(comptime T: type, allocator: Allocator, filename: []const u8) !T {
@@ -51,8 +54,7 @@ pub fn main() anyerror!void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var plot_data: PlotData = undefined;
-    plot_data = try readJSON(PlotData, allocator, filename);
+    const plot_data: PlotData = try readJSON(PlotData, allocator, filename);
 
     // Gnuzplot
     var plt = try Gnuzplot.init(allocator);
@@ -72,7 +74,10 @@ pub fn main() anyerror!void {
     // double plot
     try plt.gridOff();
     try plt.title("Two other signals with transparency");
-    try plt.plot(.{ plot_data.s, "title 'sin' with lines ls 14 lw 2", plot_data.n, "title 'sin in noise' with lines ls 25 lw 2" });
+    try plt.plot(.{
+        plot_data.s, "title 'sin' with lines ls 14 lw 2",
+        plot_data.n, "title 'sin in noise' with lines ls 25 lw 2",
+    });
     try plt.pause(3);
 
     // // x vs. y line plot
@@ -93,12 +98,26 @@ pub fn main() anyerror!void {
     try plt.title("bar plot");
     try plt.bar(.{ plot_data.x, 0.75, "title 'x' ls 7 " });
     try plt.pause(3);
-    try plt.gridOn();
 
     // shared bar plot
+    try plt.gridOn();
     try plt.title("shared bar plot with three vectors");
-    try plt.bar(.{ plot_data.x, 0.5, "title 'x' ls 33 ", plot_data.y, 0.5, "title 'y' ls 44 ", plot_data.z, 0.5, "title 'z' ls 55 " });
-    try plt.pause(5);
+    try plt.bar(.{
+        plot_data.x, 0.5, "title 'x' ls 33 ",
+        plot_data.y, 0.5, "title 'y' ls 44 ",
+        plot_data.z, 0.5, "title 'z' ls 55 ",
+    });
+    try plt.pause(3);
+
+    // splot with nonuniform matrix
+    try plt.title("splot");
+    try plt.splot(.{
+        plot_data.splot_x,
+        plot_data.splot_y,
+        plot_data.splot_z,
+        "with lines title 'z(x, y)'",
+    });
+    try plt.pause(3);
 
     try plt.exit();
 }
