@@ -50,7 +50,7 @@ pub fn Gnuzplot() type {
         }
 
         // manually execute any gnuplot command with automatically added Enter
-        pub fn cmd(self: Self, c: []const u8) !void {
+        pub fn cmd(self: *const Self, c: []const u8) !void {
             if (self.debug_mode) {
                 std.debug.print("{s}\n", .{c});
             }
@@ -58,38 +58,38 @@ pub fn Gnuzplot() type {
         }
 
         // clear the plot figure
-        pub fn clear(self: Self) !void {
+        pub fn clear(self: *const Self) !void {
             try self.cmdfmt("clear\n", .{});
         }
 
         // close gnuplot child process
-        pub fn exit(self: Self) !void {
+        pub fn exit(self: *const Self) !void {
             try self.cmdfmt("exit\n", .{});
         }
 
         // place figure window on screen
-        pub fn figPos(self: Self, x: i64, y: i64) !void {
+        pub fn figPos(self: *const Self, x: i64, y: i64) !void {
             try self.cmdfmt("set term qt position {d} , {d} \n", .{ x, y });
         }
 
         // size figure window
-        pub fn figSize(self: Self, wid: i64, ht: i64) !void {
+        pub fn figSize(self: *const Self, wid: i64, ht: i64) !void {
             try self.cmdfmt("set term qt size {d} , {d} \n", .{ wid, ht });
         }
 
         // remove grid from the plot
-        pub fn gridOff(self: Self) !void {
+        pub fn gridOff(self: *const Self) !void {
             try self.cmdfmt("unset grid\n", .{});
         }
 
         // place a grid on the plot
-        pub fn gridOn(self: Self) !void {
+        pub fn gridOn(self: *const Self) !void {
             try self.cmdfmt("set grid\n", .{});
         }
 
         // pause both parent zig process and child gnuplot process (maintain sync)
         // prints a message to stdout terminal
-        pub fn pause(self: Self, secs: f64) !void {
+        pub fn pause(self: *const Self, secs: f64) !void {
             try stdout.print("pausing {d} s\n", .{secs}); //
             try self.cmdfmt("pause {d}\n", .{secs}); //gnu
 
@@ -100,7 +100,7 @@ pub fn Gnuzplot() type {
 
         // pause both parent zig process and child gnuplot process (maintain sync)
         // without terminal message
-        pub fn pauseQuiet(self: Self, secs: f64) !void {
+        pub fn pauseQuiet(self: *const Self, secs: f64) !void {
             try self.cmdfmt("pause {d}\n", .{secs}); //gnu
 
             const nanosecs: u64 = @intFromFloat(secs * 1.0e9);
@@ -120,7 +120,7 @@ pub fn Gnuzplot() type {
         //          z, "title 'x' with lines ls 2 lw 1",
         //          });
 
-        pub fn plot(self: Self, argstruct: anytype) !void {
+        pub fn plot(self: *const Self, argstruct: anytype) !void {
             const argvec = fields(@TypeOf(argstruct));
             comptime var i = 0;
             var vlen: usize = 0;
@@ -154,7 +154,7 @@ pub fn Gnuzplot() type {
         //
         // plt.plotXY( .{x, y, "title 'y vs. x' with lines lw 3"});
         //
-        pub fn plotXY(self: Self, argstruct: anytype) !void {
+        pub fn plotXY(self: *const Self, argstruct: anytype) !void {
             const argvec = fields(@TypeOf(argstruct));
             comptime var i = 0;
             var vlen: usize = 0;
@@ -184,17 +184,17 @@ pub fn Gnuzplot() type {
         }
 
         // set the figure title
-        pub fn title(self: Self, title_str: [*:0]const u8) !void {
+        pub fn title(self: *const Self, title_str: [*:0]const u8) !void {
             try self.cmdfmt("set title '{s}'\n", .{title_str});
         }
 
         // put label on x-axis
-        pub fn xLabel(self: Self, c: [*:0]const u8) !void {
+        pub fn xLabel(self: *const Self, c: [*:0]const u8) !void {
             try self.cmdfmt("set xlabel '{s}'\n", .{c});
         }
 
         // put label on y-axis
-        pub fn yLabel(self: Self, c: [*:0]const u8) !void {
+        pub fn yLabel(self: *const Self, c: [*:0]const u8) !void {
             try self.cmdfmt("set ylabel '{s}'\n", .{c});
         }
 
@@ -204,7 +204,7 @@ pub fn Gnuzplot() type {
         //
         // a width must be specified
         //
-        pub fn bar(self: Self, argstruct: anytype) !void {
+        pub fn bar(self: *const Self, argstruct: anytype) !void {
             const num_args_per = 3;
             const argvec = fields(@TypeOf(argstruct));
             const num_vars: usize = argvec.len / num_args_per;
