@@ -184,17 +184,17 @@ pub fn Gnuzplot() type {
         }
 
         // set the figure title
-        pub fn title(self: *const Self, title_str: [*:0]const u8) !void {
+        pub fn title(self: *const Self, title_str: []const u8) !void {
             try self.cmdfmt("set title '{s}'\n", .{title_str});
         }
 
         // put label on x-axis
-        pub fn xLabel(self: *const Self, c: [*:0]const u8) !void {
+        pub fn xLabel(self: *const Self, c: []const u8) !void {
             try self.cmdfmt("set xlabel '{s}'\n", .{c});
         }
 
         // put label on y-axis
-        pub fn yLabel(self: *const Self, c: [*:0]const u8) !void {
+        pub fn yLabel(self: *const Self, c: []const u8) !void {
             try self.cmdfmt("set ylabel '{s}'\n", .{c});
         }
 
