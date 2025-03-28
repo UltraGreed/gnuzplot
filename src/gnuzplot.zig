@@ -107,81 +107,6 @@ pub const Gnuzplot = struct {
         std.time.sleep(nanosecs); // std.time.sleep expects nanoseconds
     }
 
-    // plot a single vector (values over each index) use:
-    //
-    // plt.plot( .{x, "title 'x' with lines ls 5 lw 1"});
-    //
-    // to plot multiple vector in same plot (values over each index) use:
-    //
-    //  plt.plot( .{
-    //          x, "title 'x' with lines ls 2 lw 1",
-    //          y, "title 'x' with lines ls 2 lw 1",
-    //          z, "title 'x' with lines ls 2 lw 1",
-    //          });
-
-    pub fn plot(self: *const Self, argstruct: anytype) !void {
-        const argvec = fields(@TypeOf(argstruct));
-        comptime var i = 0;
-        var vlen: usize = 0;
-
-        const preamble = "plot ";
-        const plotline_pre = " '-' u 1:2 ";
-        const plotline_post = ", ";
-
-        try self.cmdfmt("{s}", .{preamble});
-
-        // write command string
-        inline while (i < argvec.len) : (i += 2) {
-            try self.cmdfmt("{s}", .{plotline_pre});
-            try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 1].name)});
-            try self.cmdfmt("{s}", .{plotline_post});
-        }
-        try self.cmdfmt("\n", .{});
-
-        i = 0;
-        inline while (i < argvec.len) : (i += 2) {
-            vlen = @field(argstruct, argvec[i].name).len;
-            var j: usize = 0;
-            while (j < vlen) : (j += 1) {
-                try self.cmdfmt("{d}  {e:10.4}\n", .{ j, @field(argstruct, argvec[i].name)[j] });
-            }
-            try self.cmdfmt("e\n", .{});
-        }
-    }
-
-    // plot the graph of vector x vs. vector y using:
-    //
-    // plt.plotXY( .{x, y, "title 'y vs. x' with lines lw 3"});
-    //
-    pub fn plotXY(self: *const Self, argstruct: anytype) !void {
-        const argvec = fields(@TypeOf(argstruct));
-        comptime var i = 0;
-        var vlen: usize = 0;
-        const preamble = "plot ";
-        const plotline_pre = " '-' u 1:2 ";
-        const plotline_post = ", ";
-
-        try self.cmdfmt("{s}", .{preamble});
-
-        // write command string
-        inline while (i < argvec.len) : (i += 3) {
-            try self.cmdfmt("{s}", .{plotline_pre});
-            try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 2].name)});
-            try self.cmdfmt("{s}", .{plotline_post});
-        }
-        try self.cmdfmt("\n", .{});
-
-        i = 0;
-        inline while (i < argvec.len) : (i += 3) {
-            vlen = @field(argstruct, argvec[i].name).len;
-            var j: usize = 0;
-            while (j < vlen) : (j += 1) {
-                try self.cmdfmt("{e:10.4}   {e:10.4}\n", .{ @field(argstruct, argvec[i].name)[j], @field(argstruct, argvec[i + 1].name)[j] });
-            }
-            try self.cmdfmt("e\n", .{});
-        }
-    }
-
     // set the figure title
     pub fn title(self: *const Self, title_str: []const u8) !void {
         try self.cmdfmt("set title '{s}'\n", .{title_str});
@@ -197,54 +122,118 @@ pub const Gnuzplot = struct {
         try self.cmdfmt("set ylabel '{s}'\n", .{c});
     }
 
-    // bar graph of a single vector, specifying the width
+    // plot a single vector (values over each index) use:
     //
-    // plt.bar( .{x, width, "title 'x'"});
+    // plt.plot( .{x, "title 'x' with lines ls 5 lw 1"});
     //
-    // a width must be specified
+    // to plot multiple vector in same plot (values over each index) use:
     //
-    pub fn bar(self: *const Self, argstruct: anytype) !void {
-        const num_args_per = 3;
+    //  plt.plot( .{
+    //          x, "title 'x' with lines ls 2 lw 1",
+    //          y, "title 'x' with lines ls 2 lw 1",
+    //          z, "title 'x' with lines ls 2 lw 1",
+    //          });
+    pub fn plot(self: *const Self, argstruct: anytype) !void {
         const argvec = fields(@TypeOf(argstruct));
-        const num_vars: usize = argvec.len / num_args_per;
-        var vlen: usize = 0;
 
-        var width: f64 = @as(f64, @floatCast(@field(argstruct, argvec[1].name)));
-        width = @as(f64, @floatFromInt(num_args_per)) * width / @as(f64, @floatFromInt(argvec.len));
+        if (argvec.len % 2 != 0) {
+            return error.WrongArgument;
+        }
 
-        vlen = @field(argstruct, argvec[0].name).len;
-
-        try self.cmdfmt("set xrange [-1:{d}]\n", .{vlen + 1});
-
-        const preamble = "set style fill solid 0.5 \n plot ";
-        const plotline_pre = " '-' u 1:2:3 with boxes ";
-        const plotline_post = ", ";
-        try self.cmdfmt("{s}", .{preamble});
+        inline for (0..argvec.len / 2) |i| {
+            try self.cmdfmt("$data{d} << EOD\n", .{i});
+            const ys = @field(argstruct, argvec[i * 2].name);
+            for (0.., ys) |j, y| {
+                try self.cmdfmt("{d} {e:10.4}\n", .{ j, y });
+            }
+            try self.cmdfmt("EOD\n", .{});
+        }
 
         // write command string
-        comptime var i = 0;
-        inline while (i < argvec.len) : (i += 3) {
-            try self.cmdfmt("{s}", .{plotline_pre});
-            try self.cmdfmt("{s}", .{@field(argstruct, argvec[i + 2].name)});
-            try self.cmdfmt("{s}", .{plotline_post});
+        try self.cmdfmt("plot ", .{});
+        inline for (0..argvec.len / 2) |i| {
+            const command_suffix = @field(argstruct, argvec[i * 2 + 1].name);
+            try self.cmdfmt("$data{d} {s}, ", .{
+                i,
+                command_suffix,
+            });
         }
         try self.cmdfmt("\n", .{});
+    }
 
-        i = 0;
-        inline while (i < argvec.len) : (i += 3) {
-            vlen = @field(argstruct, argvec[i].name).len;
-            var j: usize = 0;
+    // plot the graph of vector x vs. vector y using:
+    //
+    // plt.plotXY( .{x, y, "title 'y vs. x' with lines lw 3"});
+    //
+    pub fn plotXY(self: *const Self, argstruct: anytype) !void {
+        const argvec = fields(@TypeOf(argstruct));
 
-            while (j < vlen) : (j += 1) {
-                try self.cmdfmt("{d}   {e:10.4} {e:10.4}\n", .{
-                    @as(f64, @floatFromInt(j)) + @as(f64, @floatFromInt(i)) * width / @as(f64, @floatFromInt(num_vars)),
+        if (argvec.len % 3 != 0) {
+            return error.WrongArgument;
+        }
 
-                    @field(argstruct, argvec[i].name)[j],
-                    // @field(argstruct, argvec[i+1].name)
+        inline for (0..argvec.len / 3) |i| {
+            try self.cmdfmt("$data{d} << EOD\n", .{i});
+            const xs = @field(argstruct, argvec[i * 3].name);
+            const ys = @field(argstruct, argvec[i * 3 + 1].name);
+            for (xs, ys) |x, y| {
+                try self.cmdfmt("{e:10.4} {e:10.4}\n", .{ x, y });
+            }
+            try self.cmdfmt("EOD\n", .{});
+        }
+
+        // write command string
+        try self.cmdfmt("plot ", .{});
+        inline for (0..argvec.len / 3) |i| {
+            const command_suffix = @field(argstruct, argvec[i * 3 + 2].name);
+            try self.cmdfmt("$data{d} {s}, ", .{
+                i,
+                command_suffix,
+            });
+        }
+        try self.cmdfmt("\n", .{});
+    }
+    // plot the bar graph of vectors
+    // if multiple vectors are provided, their corresponding elements are grouped together
+    //
+    // plt.bar(.{x, width, "title 'x'"});
+    //
+    // a width in range of [0, 1] must be specified
+    pub fn bar(self: Self, argstruct: anytype) !void {
+        const argvec = fields(@TypeOf(argstruct));
+
+        if (argvec.len % 3 != 0) {
+            return error.WrongArgument;
+        }
+
+        const n_plots = argvec.len / 3;
+        // Basically we just want to group bars a bit if more than 1 vector was provided
+        const offset_x = if (n_plots == 1) n_plots else n_plots + 1;
+
+        inline for (0..n_plots) |i| {
+            try self.cmdfmt("$data{d} << EOD\n", .{i});
+            const xs = @field(argstruct, argvec[i * 3].name);
+            const width: f64 = @field(argstruct, argvec[i * 3 + 1].name);
+            for (0.., xs) |j, x| {
+                try self.cmdfmt("{d} {e:.4} {e:.4}\n", .{
+                    i + j * offset_x,
+                    x,
                     width,
                 });
             }
-            try self.cmdfmt("e\n", .{});
+            try self.cmdfmt("EOD\n", .{});
         }
+
+        // write command string
+        try self.cmdfmt("set style fill solid 0.5\n ", .{});
+        try self.cmdfmt("plot ", .{});
+        inline for (0..n_plots) |i| {
+            const command_suffix = @field(argstruct, argvec[i * 3 + 2].name);
+            try self.cmdfmt("$data{d} with boxes {s}, ", .{
+                i,
+                command_suffix,
+            });
+        }
+        try self.cmdfmt("\n", .{});
     }
 };

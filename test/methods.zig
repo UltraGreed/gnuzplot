@@ -212,6 +212,6 @@ test "debug_mode for cmd and cmdfmt" {
     var plt = try Gnuzplot.init(allocator);
     plt.debug_mode = true;
     try plt.cmd("help help");
-    try plt.cmdfmt("{s}", .{"help help"});
+    try plt.cmdfmt("{s}\n", .{"help help"});
     try plt.exit();
 }
