@@ -55,7 +55,7 @@ pub fn main() anyerror!void {
     plot_data = try readJSON(PlotData, allocator, filename);
 
     // Gnuzplot
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
 
     // single plot
     try plt.gridOn();

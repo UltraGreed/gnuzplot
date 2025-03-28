@@ -8,7 +8,7 @@ test "\t methods, \t .init \n" {
     defer arena.deinit();
     const allocator = arena.allocator();
     print("Apparently, at present, there is no way to failure to spawn\n", .{});
-    const plt = try Gnuzplot().init(allocator);
+    const plt = try Gnuzplot.init(allocator);
     _ = plt;
 }
 
@@ -16,7 +16,7 @@ test "\t methods, \t .cmd (print help help message and exits\n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.cmd("help help");
     try plt.exit();
 }
@@ -25,7 +25,7 @@ test "\t methods, \t .cmdfmt (print help help message and exits\n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.cmdfmt("{s}\n", .{"help help"});
     try plt.exit();
 }
@@ -34,7 +34,7 @@ test "\t methods, \t .exit \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.exit();
 }
 
@@ -42,7 +42,7 @@ test "\t methods, \t .figPos \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.figPos(40, 40);
     try plt.exit();
 }
@@ -51,7 +51,7 @@ test "\t methods, \t .figSize \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.figSize(40, 40);
     try plt.exit();
 }
@@ -60,7 +60,7 @@ test "\t methods, \t .gridOff \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.gridOff();
     try plt.exit();
 }
@@ -69,7 +69,7 @@ test "\t methods, \t .gridOn \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.gridOn();
     try plt.exit();
 }
@@ -78,7 +78,7 @@ test "\t methods, \t .pause \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pause(0.5);
     try plt.exit();
 }
@@ -87,7 +87,7 @@ test "\t methods, \t .pauseQuiet \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.5);
     try plt.exit();
 }
@@ -99,7 +99,7 @@ test "\t methods, \t .plot (single vector) \n" {
     const x = [_]f32{ 1.1, -0.3, 2.2, -0.1 };
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.plot(.{ x, "title 'x' with lines ls 4 lw 3" });
@@ -116,7 +116,7 @@ test "\t methods, \t .plot (multiple vectors) \n" {
     const z = [_]f32{ 1.7, -0.9, -2.2, -0.3 };
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.plot(.{
@@ -136,7 +136,7 @@ test "\t methods, \t .plotXY (y vs. x) \n" {
     const y = [_]f32{ -1.3, 0.2, 1.2, 0.1 };
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.plotXY(.{
@@ -155,7 +155,7 @@ test "\t methods, \t .title, .xLabel, .yLabel (with a sample plot) \n" {
     const x = [_]f32{ 1.1, -0.3, 2.2, -0.1 };
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.title("This is the title");
@@ -174,7 +174,7 @@ test "\t methods, \t .bar (of single vector) \n" {
     const width = 0.8;
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.bar(.{ x, width, "title 'x'" });
@@ -192,7 +192,7 @@ test "\t methods, \t .bar (shared bar plot - multiple vectors) \n" {
     const width = 0.5;
 
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     try plt.pauseQuiet(0.2);
 
     try plt.bar(.{
@@ -209,7 +209,7 @@ test "debug_mode for cmd and cmdfmt" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var plt = try Gnuzplot().init(allocator);
+    var plt = try Gnuzplot.init(allocator);
     plt.debug_mode = true;
     try plt.cmd("help help");
     try plt.cmdfmt("{s}", .{"help help"});
