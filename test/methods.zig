@@ -204,3 +204,14 @@ test "\t methods, \t .bar (shared bar plot - multiple vectors) \n" {
     try plt.pauseQuiet(2.0);
     try plt.exit();
 }
+
+test "debug_mode for cmd and cmdfmt" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var plt = try Gnuzplot().init(allocator);
+    plt.debug_mode = true;
+    try plt.cmd("help help");
+    try plt.cmdfmt("{s}", .{"help help"});
+    try plt.exit();
+}
