@@ -1,7 +1,6 @@
 const std = @import("std");
 
 const Allocator = std.mem.Allocator;
-const stdout = std.io.getStdOut().writer();
 
 const Child = std.process.Child;
 
@@ -87,9 +86,9 @@ pub const Gnuzplot = struct {
     }
 
     // pause both parent zig process and child gnuplot process (maintain sync)
-    // prints a message to stdout terminal
+    // prints a message to stderr terminal
     pub fn pause(self: *const Self, secs: f64) !void {
-        try stdout.print("pausing {d} s\n", .{secs}); //
+        std.debug.print("pausing {d} s\n", .{secs}); //
         try self.cmdfmt("pause {d}\n", .{secs}); //gnu
 
         const nanosecs: u64 = @intFromFloat(secs * 1.0e9);

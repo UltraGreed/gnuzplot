@@ -1,3 +1,4 @@
+//! These tests kinda don't work for now, and I don't know how to fix them
 const gnuzplot = @import("gnuzplot");
 const std = @import("std");
 const print = std.debug.print;
@@ -7,26 +8,26 @@ test "\t methods, \t .init \n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    print("Apparently, at present, there is no way to failure to spawn\n", .{});
+    print("Apparently, for now, there is no way to fail spawning\n", .{});
     const plt = try Gnuzplot.init(allocator);
     _ = plt;
 }
 
-test "\t methods, \t .cmd (print help help message and exits\n" {
+test "\t methods, \t .cmd (print pwd message and exit\n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
     var plt = try Gnuzplot.init(allocator);
-    try plt.cmd("help help");
+    try plt.cmd("pwd");
     try plt.exit();
 }
 
-test "\t methods, \t .cmdfmt (print help help message and exits\n" {
+test "\t methods, \t .cmdfmt (print pwd message and exits\n" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
     var plt = try Gnuzplot.init(allocator);
-    try plt.cmdfmt("{s}\n", .{"help help"});
+    try plt.cmdfmt("{s}\n", .{"pwd"});
     try plt.exit();
 }
 
@@ -100,7 +101,7 @@ test "\t methods, \t .plot (single vector) \n" {
 
     const allocator = arena.allocator();
     var plt = try Gnuzplot.init(allocator);
-    try plt.pauseQuiet(0.2);
+    try plt.pauseQuiet(1);
 
     try plt.plot(.{ x, "title 'x' with lines ls 4 lw 3" });
     try plt.pauseQuiet(1.0);
@@ -211,7 +212,7 @@ test "debug_mode for cmd and cmdfmt" {
     const allocator = arena.allocator();
     var plt = try Gnuzplot.init(allocator);
     plt.debug_mode = true;
-    try plt.cmd("help help");
-    try plt.cmdfmt("{s}\n", .{"help help"});
+    try plt.cmd("pwd");
+    try plt.cmdfmt("{s}\n", .{"pwd"});
     try plt.exit();
 }

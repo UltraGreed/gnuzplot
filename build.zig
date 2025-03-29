@@ -38,5 +38,5 @@ pub fn build(b: *std.Build) void {
     unit_tests.root_module.addImport("gnuzplot", gnuzplot_mod);
 
     const unit_tests_step = b.step("test", "Run unit tests");
-    unit_tests_step.dependOn(&unit_tests.step);
+    unit_tests_step.dependOn(&b.addRunArtifact(unit_tests).step);
 }
