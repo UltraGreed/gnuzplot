@@ -216,3 +216,22 @@ test "debug_mode for cmd and cmdfmt" {
     try plt.cmdfmt("{s}\n", .{"pwd"});
     try plt.exit();
 }
+
+test "splot with nonunified matrix" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var plt = try Gnuzplot.init(allocator);
+    const xs = [_]f64{ 1.0, 2.5, 3.0 };
+    const ys = [_]f64{ 1.0, 1.5, 3.0 };
+    const zs = [_][3]f64{
+        .{ 10.0, 5.0, 3.0 },
+        .{ 6.0, 5.0, 8.0 },
+        .{ 3.1, 8.1, 10.5 },
+    };
+    try plt.splot(.{
+        xs, ys, zs, "with lines title 'test splot'",
+    });
+    try plt.pauseQuiet(3.0);
+    try plt.exit();
+}
